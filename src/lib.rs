@@ -32,6 +32,27 @@ pub fn slugify_16d50d(s: &str) -> String {
     result
 }
 
+/// Slugifies `s`: lowercases ASCII letters, keeps ASCII letters and digits,
+/// and collapses every other run of characters into a single `-`. The
+/// result never starts or ends with `-`.
+pub fn slugify_d88da5(s: &str) -> String {
+    let mut result = String::new();
+    let mut last_was_sep = true;
+    for c in s.chars() {
+        if c.is_ascii_alphanumeric() {
+            result.push(c.to_ascii_lowercase());
+            last_was_sep = false;
+        } else if !last_was_sep {
+            result.push('-');
+            last_was_sep = true;
+        }
+    }
+    if result.ends_with('-') {
+        result.pop();
+    }
+    result
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -71,6 +92,30 @@ mod tests {
     fn slugify_never_starts_or_ends_with_dash() {
         assert_eq!(
             slugify_16d50d("-leading and trailing-"),
+            "leading-and-trailing"
+        );
+    }
+
+    #[test]
+    fn slugify_d88da5_lowercases_and_collapses_separators() {
+        assert_eq!(slugify_d88da5("Hello, World!"), "hello-world");
+        assert_eq!(slugify_d88da5("  foo---bar_BAZ99  "), "foo-bar-baz99");
+    }
+
+    #[test]
+    fn slugify_d88da5_empty_input_is_empty() {
+        assert_eq!(slugify_d88da5(""), "");
+    }
+
+    #[test]
+    fn slugify_d88da5_only_punctuation_is_empty() {
+        assert_eq!(slugify_d88da5("!!!---???"), "");
+    }
+
+    #[test]
+    fn slugify_d88da5_never_starts_or_ends_with_dash() {
+        assert_eq!(
+            slugify_d88da5("-leading and trailing-"),
             "leading-and-trailing"
         );
     }
